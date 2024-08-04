@@ -1,0 +1,25 @@
+// control D muhabbeti
+// Komutlar
+		// PING
+		// NOTICE 
+		// PRIVMSG
+		// JOIN ✅
+		// USER	✅
+		// NICK ✅
+		// PASS ✅
+		// QUIT ✅
+
+		// PART // "PART", 
+		// TOPIC // "TOPIC", 
+		// KICK // "KICK", 
+		
+		// HELP
+		// OP
+
+		// "INVITE",
+		// "WHO",
+		// "LIST", 
+		// "MODE"
+
+
+https://www.kvirc.net/doc/doc_rfc2812.html
