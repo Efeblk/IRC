@@ -53,7 +53,6 @@ class Server
 		void removeUser(User* user); // Kullanıcıyı kaldırma
 		void handlePendingUsers(); //
 		void handleConnectedUsers(); //
-		void messageChannel(const std::string& channelName, const std::string& message, User* sender);
 		std::string parseText(const std::string& str); // Mesajdan metni ayrıştırma
 		User* findUserByNickname(const std::string& nickname);
 		std::string formatWhoReply(User* user, const std::string& channelName);

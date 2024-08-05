@@ -276,16 +276,6 @@ void Server::removeUser(User* user) {
     std::cout << "User removed" << std::endl;
 }
 
-void Server::messageChannel(const std::string& channelName, const std::string& message, User* sender) {
-    if (channels.find(channelName) != channels.end()) {
-		//defaultChannel->messageAllUsers(message, sender);
-        channels[channelName].messageAllUsers(message, sender);
-    } else {
-        std::string error_msg = "ERROR: Channel " + channelName + " does not exist.\r\n";
-        send(sender->getSocketFD(), error_msg.c_str(), error_msg.length(), 0);
-    }
-}
-
 void Server::parser(std::vector<std::string> *tokens, std::string cmd) {
     size_t pos = cmd.find(':');
     std::string left_str = "";

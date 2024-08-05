@@ -167,14 +167,7 @@ void Server::PRIVMSG(User* user, std::vector<std::string> tokens)
         std::map<std::string, Channel>::iterator it = channels.find(target);
         if (it != channels.end()) {
             Channel& channel = it->second;
-            std::string fullMessage = ":" + user->getNickname() + " PRIVMSG " + target + " :" + message + "\r\n";
-            std::vector<User*>::iterator userIt;
-            for (userIt = channel.getUsers().begin(); userIt != channel.getUsers().end(); ++userIt) {
-                if ((*userIt)->getNickname() != user->getNickname()) {
-                    send((*userIt)->getSocketFD(), fullMessage.c_str(), fullMessage.length(), 0);
-                }
-            }
-            //messageallusers above?
+            channel.messageAllUsers(message, user);
         } else {
             std::string errorMessage = "ERROR :No such channel\r\n";
             send(user->getSocketFD(), errorMessage.c_str(), errorMessage.length(), 0);
@@ -203,9 +196,7 @@ void Server::PART(User* user, std::vector<std::string> tokens) {
     std::stringstream ss(channelsList);
     std::string channelName;
 
-    std::cout << "Processing PART command..." << std::endl;
     while (std::getline(ss, channelName, ',')) {
-        std::cout << "Attempting to part from channel: " << channelName << std::endl;
         std::map<std::string, Channel>::iterator it = channels.find(channelName);
         if (it == channels.end()) {
             std::string errorMessage = "ERROR :No such channel " + channelName + "\r\n";
@@ -240,7 +231,6 @@ void Server::PART(User* user, std::vector<std::string> tokens) {
         send(user->getSocketFD(), partMessageFull.c_str(), partMessageFull.length(), 0);
         std::cout << "User parted from channel: " << channelName << std::endl;
     }
-    std::cout << "PART command processing complete." << std::endl;
 }
 
 // Placeholder function for the TOPIC command
@@ -450,7 +440,7 @@ void Server::KICK(User* user, std::vector<std::string> tokens) {
     Channel& channel = channelIt->second;
 
     // Check if the issuer is a channel operator
-    if (!channel.isOperator(user)) {
+    if (!channel.isOperator(user) && !user->operator_) {
         std::string errorMsg = ":" + serverName + " 482 " + channelName + " :You're not a channel operator\r\n"; // ERR_CHANOPRIVSNEEDED
         send(user->getSocketFD(), errorMsg.c_str(), errorMsg.length(), 0);
         return;
@@ -468,10 +458,12 @@ void Server::KICK(User* user, std::vector<std::string> tokens) {
     channel.removeUser(targetUser);
     // Notify the channel and the user being kicked
     std::string kickMsg = ":" + user->getNickname() + "!" + user->getUsername() + "@" + user->getIP() + " KICK " + channelName + " " + targetNickname + " :" + comment + "\r\n";
-    channel.messageAllUsers(kickMsg, 0); // Notify all users in the channel
+    std::vector<User*>::iterator userIt;
+    for (userIt = channel.getUsers().begin(); userIt != channel.getUsers().end(); ++userIt) {
+        send((*userIt)->getSocketFD(), kickMsg.c_str(), kickMsg.length(), 0); // Notify the channel
+    }
     send(targetUser->getSocketFD(), kickMsg.c_str(), kickMsg.length(), 0); // Notify the user being kicked
 }
-
 
 
 //HELPERS
