@@ -73,10 +73,9 @@ class Server
 		void TOPIC(User* user, std::vector<std::string> tokens);
 		void NOTICE(User* user, std::vector<std::string> tokens);
 		void MODE(User* user, std::vector<std::string> tokens);
-		void LIST(User* user, std::vector<std::string> tokens);
-		void NAMES(User* user, std::vector<std::string> tokens);
 		void WHO(User* user, std::vector<std::string> tokens);
 		void OPER(User* user, std::vector<std::string> tokens);
+		void PING(User* user, std::vector<std::string> tokens);
 		std::map<std::string, Channel> channels;
 };
 

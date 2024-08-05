@@ -328,21 +328,6 @@ void Server::MODE(User* user, std::vector<std::string> tokens)
     send(user->getSocketFD(), modeAck.c_str(), modeAck.length(), 0);
 }
 
-
-// Placeholder function for the LIST command
-void Server::LIST(User* user, std::vector<std::string> tokens)
-{
-    (void)user;
-    (void)tokens;
-}
-
-// Placeholder function for the NAMES command
-void Server::NAMES(User* user, std::vector<std::string> tokens)
-{
-    (void)user;
-    (void)tokens;
-}
-
 // Placeholder function for the WHO command
 void Server::WHO(User* user, std::vector<std::string> tokens) {
     if (tokens.size() < 2) {
@@ -465,6 +450,18 @@ void Server::KICK(User* user, std::vector<std::string> tokens) {
     send(targetUser->getSocketFD(), kickMsg.c_str(), kickMsg.length(), 0); // Notify the user being kicked
 }
 
+
+void Server::PING(User* user, std::vector<std::string> tokens)
+{
+    if (tokens.size() < 2) {
+        send(user->getSocketFD(), "ERROR :No PING message specified\r\n", 33, 0);
+        return;
+    }
+
+    std::string pingMessage = tokens[1];
+    std::string pongMessage = ":" + serverName + " PONG " + serverName + " :" + pingMessage + "\r\n";
+    send(user->getSocketFD(), pongMessage.c_str(), pongMessage.length(), 0);
+}
 
 //HELPERS
 //HELPERS

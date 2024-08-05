@@ -48,19 +48,34 @@ std::vector<User*>& Channel::getUsers() {
     return users;
 }
 
+// void Channel::messageAllUsers(const std::string& message, User* sender) {
+//     std::string nick;
+//     if (sender == nullptr)
+//         nick = "Server";
+//     else
+//         nick = sender->getNickname();
+//     std::string fullMessage = ":" + nick + " PRIVMSG " + this->getName() + " :" + message + "\r\n";
+//     for (std::vector<User*>::iterator it = users.begin(); it != users.end(); ++it) {
+//         if (*it != sender && *it != nullptr) {
+//             send((*it)->getSocketFD(), fullMessage.c_str(), fullMessage.length(), 0);
+//         }
+//     }
+// }
+
 void Channel::messageAllUsers(const std::string& message, User* sender) {
     std::string nick;
-    if (sender == nullptr)
+    if (sender == NULL)
         nick = "Server";
     else
         nick = sender->getNickname();
     std::string fullMessage = ":" + nick + " PRIVMSG " + this->getName() + " :" + message + "\r\n";
     for (std::vector<User*>::iterator it = users.begin(); it != users.end(); ++it) {
-        if (*it != sender && *it != nullptr) {
+        if (*it != sender && *it != NULL) {
             send((*it)->getSocketFD(), fullMessage.c_str(), fullMessage.length(), 0);
         }
     }
 }
+
 
 int Channel::getUserCount() const {
     return users.size();

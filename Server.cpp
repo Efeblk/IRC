@@ -32,7 +32,6 @@ Server::~Server() {
 }
 
 bool Server::isPortValid(std::string port) {
-    // Rakam kontrolü
     for (size_t i = 0; i < port.length(); ++i) {
         if (!isdigit(port[i])) {
             return false;
@@ -234,7 +233,7 @@ void Server::executeCommands(User* user, std::vector<std::string> tokens, std::s
         &Server::MODE, &Server::WHO, &Server::OPER 
     };
     std::string commands[] = {
-        "PASS", "NICK", "USER", "JOIN", "QUIT", "PRIVMSG", "PART", "KICK", "TOPIC", "NOTICE", "MODE", "WHO", "OPER"
+        "PASS", "NICK", "USER", "JOIN", "QUIT", "PRIVMSG", "PART", "KICK", "TOPIC", "NOTICE", "MODE", "WHO", "OPER", "PING"
     };
 
     if (tokens.empty()) return;
