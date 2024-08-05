@@ -2,20 +2,10 @@
 #define USER_HPP
 
 #include <string>
+#include <set>
 #include <netinet/in.h>
 
 class User {
-private:
-    int socket_fd;
-    struct sockaddr_in address;
-    bool authenticated;
-    bool is_connected;
-    std::string nickname;
-
-    std::string username;
-    std::string unused;
-    std::string realName;
-
 public:
     User(int socket_fd, struct sockaddr_in address);
     ~User();
@@ -34,14 +24,16 @@ public:
     void setMode(const std::string& modeChanges);
     void setUnused(const std::string& unused);
     void setRealName(const std::string& realName);
-    void setOperator(bool is_operator);
-
+    void setOperator(bool isOperator);
+    
     std::string getUsername() const;
     std::string getModeString() const;
     std::string getUnused() const;
     std::string getRealName() const;
+    std::string getChannels() const;
+    void addChannel(const std::string& channelName);
+    void removeChannel(const std::string& channelName);
 
-    // Boolean flags for user modes
     bool wallops;
     bool invisible;
     bool away;
@@ -52,10 +44,20 @@ public:
     
     class UsernameLong : public std::exception {
     public:
-        virtual const char *what() const throw();
+        virtual const char* what() const throw();
     };
 
+private:
+    int socket_fd;
+    struct sockaddr_in address;
+    bool authenticated;
+    bool is_connected;
+    std::string nickname;
 
+    std::string username;
+    std::string unused;
+    std::string realName;
+    std::set<std::string> channels; // Store the list of channels the user is in
 };
 
 #endif // USER_HPP

@@ -92,6 +92,12 @@ void Server::JOIN(User* user, std::vector<std::string> tokens)
 
     std::string channelName = parseText(tokens[1]);
 
+    if (channelName == "0")
+    {
+        PART(user, tokens);
+        return;
+    }
+
     // Ensure channel name starts with a valid prefix
     if (channelName.empty() || (channelName[0] != '#' && channelName[0] != '&')) {
         send(user->getSocketFD(), "ERROR :Invalid channel name\r\n", 29, 0);
@@ -110,6 +116,7 @@ void Server::JOIN(User* user, std::vector<std::string> tokens)
     }
 
     channel->addUser(user);
+    user->addChannel(channelName);
 
     //Notify all users in the channel about the new join
     //bu method doğru değil aslında ama tek for döngüsünde çalışmıyor(?), evo için yeterli yapacak bir şey yok.
@@ -131,6 +138,9 @@ void Server::JOIN(User* user, std::vector<std::string> tokens)
         std::string noTopicMessage = RPL_NOTOPIC(user->getNickname(), channelName) + "\r\n";
         send(user->getSocketFD(), noTopicMessage.c_str(), noTopicMessage.length(), 0);
     }
+
+    std::string infoMessage = "JOIN, MODE, KICK, PART, QUIT, PRIVMSG/NOTICE. \r\n";
+    send(user->getSocketFD(), infoMessage.c_str(), infoMessage.length(), 0);
 }
 
 // Handles the QUIT command, removing the user
@@ -182,20 +192,55 @@ void Server::PRIVMSG(User* user, std::vector<std::string> tokens)
     }
 }
 
-// Placeholder function for the PART command
-void Server::PART(User* user, std::vector<std::string> tokens)
-{
+void Server::PART(User* user, std::vector<std::string> tokens) {
     if (tokens.size() < 2) {
-        // Hata: Kanal ismi belirtilmedi
+        send(user->getSocketFD(), "ERROR :No channel specified\r\n", 29, 0);
         return;
     }
-    std::string channelName = tokens[1];
-    if (channels.find(channelName) != channels.end()) {
-        channels[channelName].removeUser(user);
-        if (channels[channelName].getUsers().empty()) {
-            channels.erase(channelName); // Kanalı sil
+
+    std::string partMessage = (tokens.size() > 2) ? tokens[2] : user->getNickname();
+    std::string channelsList = (tokens[1] == "0") ? user->getChannels() : tokens[1];
+    std::stringstream ss(channelsList);
+    std::string channelName;
+
+    std::cout << "Processing PART command..." << std::endl;
+    while (std::getline(ss, channelName, ',')) {
+        std::cout << "Attempting to part from channel: " << channelName << std::endl;
+        std::map<std::string, Channel>::iterator it = channels.find(channelName);
+        if (it == channels.end()) {
+            std::string errorMessage = "ERROR :No such channel " + channelName + "\r\n";
+            send(user->getSocketFD(), errorMessage.c_str(), errorMessage.length(), 0);
+            std::cout << "No such channel: " << channelName << std::endl;
+            continue;
         }
+
+        Channel& channel = it->second;
+        if (!channel.hasUser(user)) {
+            std::string errorMessage = "ERROR :You're not on that channel " + channelName + "\r\n";
+            send(user->getSocketFD(), errorMessage.c_str(), errorMessage.length(), 0);
+            std::cout << "User not in channel: " << channelName << std::endl;
+            continue;
+        }
+
+        std::string partMessageFull = ":" + user->getNickname() + " PART " + channelName + " :" + partMessage + "\r\n";
+        for (std::vector<User*>::iterator userIt = channel.getUsers().begin(); userIt != channel.getUsers().end(); ++userIt) {
+            if (*userIt != user) {
+                send((*userIt)->getSocketFD(), partMessageFull.c_str(), partMessageFull.length(), 0);
+            }
+        }
+
+        channel.removeUser(user);
+        user->removeChannel(channelName);
+        if (channel.getUsers().empty()) {
+            channels.erase(channelName);
+            std::cout << "Channel emptied and removed: " << channelName << std::endl;
+        }
+
+        // Send PART message to the user who is leaving the channel
+        send(user->getSocketFD(), partMessageFull.c_str(), partMessageFull.length(), 0);
+        std::cout << "User parted from channel: " << channelName << std::endl;
     }
+    std::cout << "PART command processing complete." << std::endl;
 }
 
 // Placeholder function for the TOPIC command

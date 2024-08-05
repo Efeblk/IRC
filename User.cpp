@@ -1,14 +1,14 @@
 #include "User.hpp"
 #include <arpa/inet.h>
 #include <stdexcept>
+#include <sstream>
 
-// Constructor
 User::User(int socket_fd, struct sockaddr_in address)
-    : socket_fd(socket_fd), address(address), authenticated(false), is_connected(true),
-      nickname("default"), username("default"), unused("*"), realName("default"),
-      wallops(false), invisible(false), away(false), restricted(false), 
-      operator_(false), local_operator(false), receipt_of_server_notices(false)
-{}
+    : wallops(false), invisible(false), away(false), restricted(false),
+      operator_(false), local_operator(false), receipt_of_server_notices(false), 
+      socket_fd(socket_fd), address(address), authenticated(false), is_connected(true),
+      nickname("default"), username("default"), unused("*"), realName("default")
+       {}
 
 // Destructor for User class
 User::~User() {
@@ -105,7 +105,7 @@ void User::setMode(const std::string& modeChanges) {
                 receipt_of_server_notices = adding;
                 break;
             default:
-                // Optionally log unknown mode character
+                // Handle unknown mode
                 break;
         }
     }
@@ -148,12 +148,33 @@ std::string User::getRealName() const {
     return realName;
 }
 
+// Get the list of channels the user is in as a comma-separated string
+std::string User::getChannels() const {
+    std::stringstream ss;
+    for (std::set<std::string>::const_iterator it = channels.begin(); it != channels.end(); ++it) {
+        if (it != channels.begin()) {
+            ss << ",";
+        }
+        ss << *it;
+    }
+    return ss.str();
+}
+
+// Add a channel to the user's list
+void User::addChannel(const std::string& channelName) {
+    channels.insert(channelName);
+}
+
+// Remove a channel from the user's list
+void User::removeChannel(const std::string& channelName) {
+    channels.erase(channelName);
+}
+
 // Exception for when the username is too long
-const char *User::UsernameLong::what() const throw() {
+const char* User::UsernameLong::what() const throw() {
     return "Username is too long";
 }
 
-// Set the user's operator status
-void User::setOperator(bool is_operator) {
-    operator_ = is_operator;
+void User::setOperator(bool isOperator) {
+    operator_ = isOperator;
 }
