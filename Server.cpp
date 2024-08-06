@@ -180,32 +180,32 @@ void Server::handleConnectedUsers() {
 void Server::handleExistingConnection(User* user) {
     char buffer[1024];
     int received = recv(user->getSocketFD(), buffer, sizeof(buffer) - 1, 0);
+
     if (received < 0) {
         if (errno != EWOULDBLOCK && errno != EAGAIN) {
-            printError("Recv failed");
+            perror("Recv failed");
             removeUser(user);
         }
     } else if (received == 0) {
+        // EOF received, treat it as a normal closure
         getpeername(user->getSocketFD(), (struct sockaddr*)&address, (socklen_t*)&addrlen);
-        std::cout << "Host disconnected, ip: " << user->getIP()
-                  << ", port: " << user->getPort() << std::endl;
+        std::cout << "Host disconnected, ip: " << user->getIP() << ", port: " << user->getPort() << std::endl;
         removeUser(user);
     } else {
         buffer[received] = '\0';
-        std::cout << "Message from " << user->getNickname() << ": " << buffer << std::endl;
-        processMessage(user, buffer);
-    }
-}
+        user->buffer.append(buffer, received);
+        
+        size_t pos;
+        while ((pos = user->buffer.find("\n")) != std::string::npos) {
+            std::string singleMessage = user->buffer.substr(0, pos);
+            user->buffer.erase(0, pos + 1);
 
-std::string Server::parseText(const std::string& str) {
-    std::string result;
-    for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
-        char c = *it;
-        if (std::isprint(c) && !std::isspace(c)) {
-            result += c;
+            if (!singleMessage.empty()) {
+                std::cout << "Message from " << user->getNickname() << ": " << singleMessage << std::endl;
+                processMessage(user, singleMessage);
+            }
         }
     }
-    return result;
 }
 
 void Server::processMessage(User* user, const std::string& message) {
@@ -300,4 +300,15 @@ void Server::parser(std::vector<std::string> *tokens, std::string cmd) {
     if (!right_str.empty()) {
         tokens->push_back(right_str);
     }
+}
+
+std::string Server::parseText(const std::string& str) {
+    std::string result;
+    for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
+        char c = *it;
+        if (std::isprint(c) && !std::isspace(c)) {
+            result += c;
+        }
+    }
+    return result;
 }

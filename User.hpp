@@ -42,12 +42,15 @@ public:
     bool local_operator;
     bool receipt_of_server_notices;
     
+    std::string buffer;
+
     class UsernameLong : public std::exception {
     public:
         virtual const char* what() const throw();
     };
 
 private:
+
     int socket_fd;
     struct sockaddr_in address;
     bool authenticated;
